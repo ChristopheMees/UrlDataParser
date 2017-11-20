@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UrlDataParser</title>
+    <script>
+      function submitLink() {
+        fetch('/url', { "method": "POST"})
+          .then(function(response){
+            return response.text();
+        })
+          .then(function(result){
+            const p = document.createElement("p");
+            p.style.cssText = "white-space: pre";
+            var content = document.createTextNode(result);
+            p.appendChild(content);
+            document.body.appendChild(p);
+        })
+          .catch(console.log)
+      }
+    </script>
+</head>
+<body>
+    <button onclick="submitLink()">Go!</button>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "url-data-parser",
+  "version": "0.0.1",
+  "description": "Perform an HTTP request and parse the result for glorious data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "url",
+    "http",
+    "request",
+    "parse",
+    "data"
+  ],
+  "author": "Christophe Mees",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.2",
+    "htmlparser2": "^3.9.2",
+    "node-fetch": "^1.7.3"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1"
+  }
+}

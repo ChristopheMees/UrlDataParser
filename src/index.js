@@ -1,17 +1,17 @@
-const path = require('path')
-const express = require('express')
-const fetch = require('node-fetch')
+const path = require('path');
+const express = require('express');
+const fetch = require('node-fetch');
 
 import parse from './parser'
 
-const app = express()
+const app = express();
 
 function handleIndex(req, res) {
   res.sendFile(path.join(__dirname + '/public/index.html'))
 }
 
-const URL_TEMPLATE = "https://en.wikipedia.org/wiki/List_of_UN_numbers_{0}_to_{1}"
-const range = [1, 3600]
+const URL_TEMPLATE = "https://en.wikipedia.org/wiki/List_of_UN_numbers_{0}_to_{1}";
+const range = [1, 3600];
 
 function generateUrls() {
   const urls = [];
@@ -60,13 +60,13 @@ function handleUrl(req, res) {
     .then(function(resultArr){
       let collector = "";
       resultArr.forEach(function(result){
-        collector += result;
+        collector += '\r\n' + result;
       })
       res.send(collector);
     });
 }
 
-app.get('/', handleIndex)
+app.get('/', handleIndex);
 app.post('/url', handleUrl);
 
-app.listen(3000)
+app.listen(3000);

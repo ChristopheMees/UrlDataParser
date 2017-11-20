@@ -1,49 +1,101 @@
 const htmlparser = require("htmlparser2");
 
-
-
 let startedRecording = false;
+let rowStarted = false;
 let columnCount = -1;
-let collector;
+let firstRow = true;
 
-let result = "";
+let inNameSegment = false;
+
+let name = "";
+let description = "";
+
+let data = []
+
+function nodeString(name, description) {
+  return '<node name="' + name + '" description="' + description + '"/>';
+}
+
+function createNode(name, description) {
+  if(name.includes("to")) {
+    const parts = name.split(" ");
+    const start = parseInt(parts[1]);
+    let endStr = parts[3];
+    if(endStr.includes('UN')) {
+      endStr = parseInt(parts[4]);
+    }
+    const end = parseInt(endStr);
+
+    const names = []
+
+    for(let i = start;i < end + 1;i++) {
+      let nameString = i.toString();
+      while(nameString.length < 4) {
+        nameString = '0' + nameString;
+      }
+
+      nameString = "UN" + nameString;
+
+      names.push(nameString);
+    }
+
+    return names.map((n) => nodeString(n, description))
+                .reduce((agg, node) => agg + "\r\n" + node);
+  } else {
+    return nodeString(name.replace(" ", ""), description)
+  }
+}
 
 const parser = new htmlparser.Parser({
-  onopentag: function(name, attribs){
-    if(name === "table") {
+  onopentag: function(tag, attribs){
+    if(tag === "table") {
       startedRecording = true;
     }
-    if(startedRecording && name === "td" && columnCount < 0) {
+    if(tag === "tr" && !firstRow) {
+      rowStarted = true;
+    } else if(tag === "tr" && firstRow) {
+      firstRow = false;
+    }
+    if(startedRecording && rowStarted && tag === "td" && columnCount < 0) {
+      inNameSegment = true;
       columnCount = 0;
-      collector = '<node name="';
     }
   },
   ontext: function(text){
-    if((columnCount === 0 || columnCount === 2) && text.trim() && !text.startsWith('[')) {
-      collector += text;
+    if(rowStarted && columnCount !== 1 && text.trim() && !text.startsWith('[')) {
+      if(inNameSegment) {
+        inNameSegment = false;
+        name = text;
+      } else {
+        description += text;
+      }
     }
   },
-  onclosetag: function(name){
-    if(name === "table") {
+  onclosetag: function(tag){
+    if(tag === "table") {
       startedRecording = false;
-    } else if(startedRecording && name === "td") {
-      if(columnCount === 0) {
-        collector += '" description="';
-      } else if(columnCount === 2) {
-        collector += '"/>';
+      firstRow = true;
+    } else if(startedRecording && tag === "td") {
+      if(columnCount > 2) {
+        description += ' ';
       }
       columnCount++;
-      if(columnCount > 2) {
-        result += collector + '\r\n'
-        collector = "";
-        columnCount = -1;
-      }
+
+    } else if(rowStarted && tag === "tr") {
+      data.push([name, description])
+
+      rowStarted = false;
+      name = "";
+      description = "";
+      columnCount = -1;
     }
   }
-}, {decodeEntities: true});
+});
 
 export default function parse(html) {
-  result = "";
+  data = [];
   parser.write(html);
-  return result;
+  return data.filter(([name]) => name.includes('UN'))
+             .map(([name, description]) => createNode(name, description))
+             .reduce((agg, node) => agg + "\r\n" + node);
 }
